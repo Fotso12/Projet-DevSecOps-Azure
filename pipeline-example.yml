@@ -1,0 +1,50 @@
+name: DevSecOps CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    # 1. Scan des secrets
+    - name: Secret Scanning (GitLeaks)
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # 2. SAST Scan
+    - name: Static Analysis (Semgrep)
+      run: |
+        python3 -m pip install semgrep
+        semgrep scan --error --config auto
+
+    # 3. Build & SCA Scan
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Build with Maven & SCA Scan
+      run: mvn verify -DskipTests # Le plugin dependency-check est lié à la phase verify
+
+    # 4. Container Scan (Trivy)
+    - name: Build Docker Image
+      run: docker build -t devsecops-demo .
+    
+    - name: Container Security Scan (Trivy)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'devsecops-demo'
+        format: 'table'
+        exit-code: '1'
+        severity: 'CRITICAL,HIGH'
