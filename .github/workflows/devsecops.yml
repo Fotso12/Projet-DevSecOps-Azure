@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Nécessaire pour SonarCloud
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -39,11 +41,16 @@ jobs:
     - name: 🛡️ Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
 
-    - name: 🛡️ SonarQube Scan
+    - name: 🛡️ SonarCloud Scan
       env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      run: mvn sonar:sonar -Dsonar.projectKey=devsecops-demo -Dsonar.host.url="${{ secrets.SONAR_HOST_URL }}" -Dsonar.login="${{ secrets.SONAR_TOKEN }}"
+      run: |
+        mvn sonar:sonar \
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
     - name: 🛡️ Secret Scanning (TruffleHog alternative)
       uses: trufflesecurity/trufflehog@main
@@ -60,7 +67,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: 🐳Build and Push Docker Image
+    - name: 🐳 Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
         context: .
