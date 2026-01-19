@@ -1,0 +1,21 @@
+# Binaires et Outils
+bin/
+*.exe
+*.zip
+*.txt
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+gitleaks-report.json
