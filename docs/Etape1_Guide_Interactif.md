@@ -26,7 +26,7 @@ git add .
 git commit -m "Initial commit - Stock Management App"
 git branch -M main
 git remote add origin [L_URL_QUE_VOUS_AVEZ_COPIEE]
-git push -u origin main
+    git push -u origin main
 ```
 
 ---
